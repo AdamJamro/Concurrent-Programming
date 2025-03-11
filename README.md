@@ -15,26 +15,9 @@ The course will cover certain concepts of concurrent programming with a more nua
 including threads, goroutines and go runtime, various synchronization techniques, locks, and condition variables, deadlock, and starvation. 
 It will include hands-on programming assignments that will make the content of this repository.
 
-
 ## Course Outline
-> ### Introduction Project 0
-> ###### Synopsis
-> random process simulation.
-> <br> We simulate a simplified scheme of a random chain of market
-> decision process pertaining manufacturing and retail <br>
-> - where the manufacturer simulated by boss and workers decides with some probability to produce a certain number of products
-> - and the market simulated by clients decides with some probability to buy a certain number of products 
->>[sources](./introduction)
-> -------------------
-> ### Visualisation tool for next projects
-> ###### Synopsis
-> web based tool for visualizing data written in react
-> listening for data on a port and visualizing it in a web page automatically
-> provided with an exemplary golang backend
->> [sources](./grid-travelers)
-> -------------------
-> ### Assignment 1
->  [assigment 1](#)
->> [sources](#)
->> - [golang](#)
->> - [ada](#)
+| capiton | synopsis | sources |
+|---|---|---|
+| market chain-of-events simulation | We simulate a simplified scheme of a random chain of market <br> decision process pertaining <br> manufacturing and retail, where: <br> &nbsp; • the manufacturer simulated by boss and workers decides with some probability to produce a certain number of products <br> &nbsp; • the market simulated by clients decides with some probability to buy a certain number of products | [GOLANG](./introduction) |
+| tbc | ...  | [GOLANG]() <br> [ADA]() |
+| ... | ... | ... |
