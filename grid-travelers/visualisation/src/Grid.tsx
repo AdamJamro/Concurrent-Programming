@@ -1,7 +1,7 @@
 import { Stage, Line, Layer, Rect, Circle, Text } from 'react-konva';
 import useWebSocket from 'react-use-websocket';
 import React from "react";
-import { GridParams, WebSocketMessage } from './types';
+import { GridParams, WebSocketMessage } from './types.ts';
 
 const GRID_STROKE_COLOR = '#ddd';
 // const GRID_BACKGROUND_COLOR = '#aa6644';

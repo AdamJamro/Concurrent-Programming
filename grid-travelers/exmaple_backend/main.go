@@ -93,6 +93,7 @@ func (s *synchronizedSocketWriter) WriteJSON(v interface{}) error {
 }
 
 func main() {
+	//http.Handle("/", http.FileServer(http.Dir("./public")))
 	go http.HandleFunc("/ws", wsHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
