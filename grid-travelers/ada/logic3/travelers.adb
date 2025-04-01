@@ -2,6 +2,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Numerics.Float_Random; use Ada.Numerics.Float_Random;
 with Random_Seeds; use Random_Seeds;
 with Ada.Real_Time; use Ada.Real_Time;
+with Ada.Characters.Handling; use Ada.Characters.Handling;
+
 
 -- proc running the simulation
 procedure  Travelers is
@@ -26,6 +28,10 @@ procedure  Travelers is
 
 -- Random seeds for the tasks' random number generators
    Seeds : Seed_Array_Type(1..Nr_Of_Travelers) := Make_Seeds(Nr_Of_Travelers);
+
+-- Exceptions
+   Step_Error : exception;
+   Semaphore_Overflow : exception;
 
 -- -- Types, procedures and functions:
 
@@ -77,7 +83,7 @@ procedure  Travelers is
         Integer'Image(Trace.Position.X) & " " &
         Integer'Image(Trace.Position.Y) & " " &
         (' ', Trace.Symbol)
-);
+      );
    end Print_Trace;
 
    procedure Print_Traces(Traces : Traces_Sequence_Type) is
@@ -104,10 +110,35 @@ procedure  Travelers is
       Id: Integer;
       Symbol: Character;
       Position: Position_Type;
+      Direction: Integer range 0 .. 3;
    end record;
 
+   protected type Semaphore_Type(size: Natural) is
+      entry Take_Semaphore;
+      entry Release_Semaphore;
+   private
+      capacity: Natural := size;
+      load: Natural     := size;
+   end Semaphore_Type;
+
+   protected body Semaphore_Type is
+      entry Take_Semaphore when load > 0 is
+      begin
+         load := load - 1;
+      end Take_Semaphore;
+      
+      entry Release_Semaphore when load < capacity is
+      begin
+         load := load + 1;
+      end Release_Semaphore;
+   end Semaphore_Type;
+
+   -- Synchronize travelers
+   type Semaphore_Pool_Type is array (0 .. Board_Width - 1, 0 .. Board_Height - 1) of Semaphore_Type(1);
+   Semaphore_Pool: Semaphore_Pool_Type;
+
    task type Traveler_Task_Type is
-      entry Init(Id: Integer; Seed: Integer; Symbol: Character);
+      entry Init(Id: Integer; Seed: Integer; Symbol: Character; Position: Position_Type);
       entry Start;
    end Traveler_Task_Type;
 
@@ -129,22 +160,36 @@ procedure  Travelers is
          );
       end Store_Trace;
 
-      procedure Make_Step is
-         N : Integer;
+      procedure Make_Step(step_timeout: in Duration) is
+         newPos : Position_Type := Traveler.Position; -- deep copy
+         success : Boolean;
       begin
-         N := Integer(Float'Floor(4.0 * Random(G)));
-         case N is
+         case Traveler.Direction is
             when 0 =>
-            Move_Up(Traveler.Position);
+            Move_Up(newPos);
             when 1 =>
-            Move_Down(Traveler.Position);
+            Move_Down(newPos);
             when 2 =>
-            Move_Left(Traveler.Position);
+            Move_Left(newPos);
             when 3 =>
-            Move_Right(Traveler.Position);
+            Move_Right(newPos);
             when others =>
-            Put_Line(" ?????????????? " & Integer'Image(N));
+            Put_Line("Error in Move procedure for traveler " &
+                     Integer'Image(Traveler.Id));
          end case;
+
+         -- check if new position is valid
+         select
+            Semaphore_Pool(newPos.X, newPos.Y).Take_Semaphore;
+         or
+            delay step_timeout;
+            raise Step_Error; 
+         end select;
+
+         -- if valid: make the move
+         Semaphore_Pool(Traveler.Position.X, Traveler.Position.Y).Release_Semaphore;
+         Traveler.Position := newPos;
+
       end Make_Step;
 
       function Get_Random_Delay return Duration is
@@ -152,18 +197,22 @@ procedure  Travelers is
          return Min_Delay + (Max_Delay-Min_Delay) * Duration(Random(G));
       end Get_Random_Delay;
 
+      random_delay : Duration;
    begin
 
-      accept Init(Id: Integer; Seed: Integer; Symbol: Character) do
+      accept Init(Id: in Integer; Seed: in Integer; Symbol: in Character; Position: in Position_Type) do
          Reset(G, Seed);
          Traveler.Id := Id;
          Traveler.Symbol := Symbol;
 
-         -- Random initial position:
-         Traveler.Position := (
-            X => Integer(Float'Floor(Float(Board_Width)  * Random(G))),
-            Y => Integer(Float'Floor(Float(Board_Height) * Random(G)))
-         );
+         Traveler.Position := Position;
+         Traveler.Direction := Integer(Random(G) + 0.5); -- randomize direction
+         -- move up or down
+         if Traveler.Id mod 2 = 0 then
+            -- or move left or right
+            Traveler.Direction := Traveler.Direction + 2;
+         end if;
+         Semaphore_Pool(Traveler.Position.X, Traveler.Position.Y).Take_Semaphore;
 
          Store_Trace; -- store starting position
 
@@ -179,11 +228,32 @@ procedure  Travelers is
       end Start;
 
       for Step in 0 .. Nr_of_Steps loop
-         delay Get_Random_Delay;
-         -- do action ...
-         Make_Step;
-         Store_Trace;
-         Time_Stamp := To_Duration (Clock - Start_Time); -- reads global clock
+         random_delay := Get_Random_Delay;
+         delay random_delay;
+         begin
+            -- try to do action ...
+            Make_Step(step_timeout => Max_Delay - random_delay);
+            Store_Trace;
+            Time_Stamp := To_Duration (Clock - Start_Time); -- reads global clock
+         exception
+            when Step_Error =>
+               --  Put_Line("Timeout reached in step " & Integer'Image(Step));
+               --  Put_Line("Traveler " & Integer'Image(Traveler.Id) & " stopped.");
+               --  Put_Line("Position: " & Integer'Image(Traveler.Position.X) & " " &
+                        --  Integer'Image(Traveler.Position.Y));
+               --  Put_Line("Symbol: " & Traveler.Symbol);
+               Traveler.Symbol := To_Lower(Traveler.Symbol); -- mark the traveler
+               Store_Trace;
+               exit;
+            when Semaphore_Overflow =>
+               Put_Line("Traveler " & Integer'Image(Traveler.Id) &
+                        " internal semaphore error ");
+               exit;
+            when others =>
+               Put_Line("Traveler " & Integer'Image(Traveler.Id) &
+                        " unknown error");
+               exit;
+         end;
       end loop;
 
       -- schedule a report
@@ -191,32 +261,37 @@ procedure  Travelers is
 
    end Traveler_Task_Type;
 
+   function Get_Initial_Position(Index: Natural) return Position_Type is
+   begin
+      return (X => Index, Y => Index);
+   end Get_Initial_Position;
+
 
 -- variables declarations for main task
-
-   -- number of travelers
    Travel_Tasks: array (0 .. Nr_Of_Travelers-1) of Traveler_Task_Type;
    Symbol : Character := 'A';
+   Initial_Positions : array (0 .. Nr_Of_Travelers-1) of Position_Type;
+   Used_Initial_Positions : array (0 .. Board_Width, 0 .. Board_Height) of Boolean := (others => (others => False));
 begin
 
-   Put_Line(
-      "timestamp "&
-      "| no. travelers" &" "&
-      "| width" &" "&
-      "| height" &" "&
-      "| symbol"
-   );
-   Put_Line(
-      "... |"&
-      Integer'Image(Nr_Of_Travelers) &" |"&
-      Integer'Image(Board_Width) &" |"&
-      Integer'Image(Board_Height) &" |"&
-      "..."
-   );
+     Put_Line(
+        "timestamp "&
+        "| no. travelers" &" "&
+        "| width" &" "&
+        "| height" &" "&
+        "| symbol"
+     );
+     Put_Line(
+        "... |"&
+        Integer'Image(Nr_Of_Travelers) &" |"&
+        Integer'Image(Board_Width) &" |"&
+        Integer'Image(Board_Height) &" |"&
+        "..."
+     );
 
 
    for I in Travel_Tasks'Range loop
-      Travel_Tasks(I).Init(I, Seeds(I+1), Symbol);
+      Travel_Tasks(I).Init(I, Seeds(I+1), Symbol, Get_Initial_Position(I));
       Symbol := Character'Succ(Symbol);
    end loop;
 

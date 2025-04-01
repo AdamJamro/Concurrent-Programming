@@ -1,0 +1,7 @@
+aggregate project Grid_Travelers is
+    for Project_Files use(
+        "./logic1/logic1.gpr",
+        "./logic2/logic2.gpr",
+        "./logic3/logic3.gpr"
+    );
+end Grid_Travelers;

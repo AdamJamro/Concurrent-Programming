@@ -1,0 +1,11 @@
+project Logic2 is
+
+    for Source_Dirs use (
+        ".",
+        "../random"
+    );
+    for Main use ("travelers.adb");
+    for Object_Dir use "obj";
+    for Exec_Dir use "bin";
+
+end Logic2;

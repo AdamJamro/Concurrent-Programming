@@ -29,7 +29,7 @@ func MakeTravelers() [config.NoOfTravelers]Traveler {
 
 	for i := range config.NoOfTravelers {
 		travelers[i].InitializeTraveler(
-			TravelerData{Id: i, Symbol: rune('a' + i), Generator: generators[i]},
+			TravelerData{Id: i, Symbol: rune('A' + i), Generator: generators[i]},
 		)
 	}
 
