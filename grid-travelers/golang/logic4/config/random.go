@@ -25,13 +25,19 @@ func getSeed(id int) rand.Source {
 }
 
 // MakeGenerators creates an array of independent sources of randomness
-func MakeGenerators(len int) [NoOfTravelers]*Generator {
+func MakeGenerators() [NoOfTravelers]*Generator {
 	var generators [NoOfTravelers]*Generator
-	for i := range len {
+	for i := range NoOfTravelers {
 		generators[i] = new(Generator)
 		generators[i].rng = rand.New(getSeed(i))
 	}
 	return generators
+}
+
+func NewGenerator() *Generator {
+	generator := new(Generator)
+	generator.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+	return generator
 }
 
 func (g Generator) Intn(bound int) int {

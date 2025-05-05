@@ -4,6 +4,8 @@ FILE=${1? 'parameter ${1} should be the name of the travel history file'}
 
 mapfile <  <(sort <${FILE} -n -k 1) TAB
 
+set -f # disable filename expansion
+
 TAB_LENGTH=${#TAB[@]}
 
 # echo "TAB_LENGTH = "${TAB_LENGTH} ## TEST
@@ -32,7 +34,7 @@ declare -i START_STEP=1 # The first step in 'travel history'
 function d_idx {  # index in DISPLAY for arguments: x y - coordimates
   X=${1}
   Y=${2}
-  echo $(( Y * WIDTH + X )) 
+  echo $(( Y * WIDTH + X ))
   # echo $X $Y
 }
 
@@ -63,14 +65,14 @@ declare -a LINE_Y;
 function display_reset { # reset the display
   DISPLAY[$(d_idx WIDTH HEIGHT)]=${TRAVELERS} # space on the 'hidden' position
   # clean screen
-  for (( Y=0; Y < HEIGHT; Y++ )) 
+  for (( Y=0; Y < HEIGHT; Y++ ))
   do
     for (( X=0; X < WIDTH; X++ ))
     do
       DISPLAY[$(d_idx $X $Y)]=${TRAVELERS}; # ${TRAVELERS} is ID of empty space
     done;
   done;
-  
+
   # Initially, all the travelers are on the 'hidden' position
   for (( ID=0; ID <= TRAVELERS; ID++ ))
   do
@@ -79,10 +81,10 @@ function display_reset { # reset the display
     LAST_X[${ID}]=${WIDTH};
     LAST_Y[${ID}]=${HEIGHT};
     SYMBOL_ID[${ID}]='?';
-  done;    
+  done;
   SYMBOL_ID[${TRAVELERS}]='.' # ${TRAVELERS} is ID of empty space
 
-  for (( Y=0; Y < HEIGHT; Y++ )) 
+  for (( Y=0; Y < HEIGHT; Y++ ))
   do
     LINE_Y[${Y}]=$(line_y ${Y});
   done;
@@ -93,9 +95,9 @@ declare -i STEP=0
 function display_print { # print current display
 
   clear;
-  echo "STEP = ${STEP}  TIME = ${ARGS[0]}" 
+  echo "STEP = ${STEP}  TIME = ${ARGS[0]}"
 
-  for (( Y=0; Y < HEIGHT; Y++ )) 
+  for (( Y=0; Y < HEIGHT; Y++ ))
   do
     # echo ${H_LINE};
     echo ${LINE_Y[${Y}]};
@@ -111,13 +113,13 @@ function display_update_by_step { # $1 is step number
   read -a ARGS < <(echo ${TAB[${STEP}]});
   # echo ${!ar[@]} ${ar[@]};  ## TEST
   # echo ${ARGS[@]};
-  # echo "STEP = ${STEP}  TIME = ${ARGS[0]}" 
-  
+  # echo "STEP = ${STEP}  TIME = ${ARGS[0]}"
+
   ID=${ARGS[1]}
   X=${ARGS[2]}
   Y=${ARGS[3]}
   SYMBOL=${ARGS[4]}
-  
+
   SYMBOL_ID[${ID}]=${SYMBOL}
   if (( ${ABOVE[${ID}]} == ${TRAVELERS} )) # if ${TRAVELERS} ABOVE ${ID} ...
   then
@@ -126,13 +128,13 @@ function display_update_by_step { # $1 is step number
   # relations bypasss the  ${ID}
   ABOVE[${BELOW[${ID}]}]=${ABOVE[${ID}]};
   BELOW[${ABOVE[${ID}]}]=${BELOW[${ID}]};
-  
+
   # TODO if (( Y != LAST_Y[${ID}] )) rebuild LINE_Y[${LAST_Y[${ID}]}]
   if (( Y != LAST_Y[${ID}] ))
   then
     LINE_Y[${LAST_Y[${ID}]}]=$(line_y ${LAST_Y[${ID}]})
   fi
-  
+
   # new 'last' coordinates
   LAST_X[${ID}]=${X}
   LAST_Y[${ID}]=${Y}
@@ -141,9 +143,9 @@ function display_update_by_step { # $1 is step number
   ABOVE[${DISPLAY[$(d_idx ${LAST_X[${ID}]} ${LAST_Y[${ID}]})]}]=${ID}
   # replace on display
   ABOVE[${ID}]=${TRAVELERS} # ${ID} is on top
-  DISPLAY[$(d_idx ${LAST_X[${ID}]} ${LAST_Y[${ID}]})]=${ID} # ocupy the new position  
-  
-  # TODO rebuild 
+  DISPLAY[$(d_idx ${LAST_X[${ID}]} ${LAST_Y[${ID}]})]=${ID} # ocupy the new position
+
+  # TODO rebuild
   LINE_Y[${LAST_Y[${ID}]}]=$(line_y ${LAST_Y[${ID}]})
 }
 
@@ -167,4 +169,3 @@ do
     read TO_STEP
   fi;
 done
-
