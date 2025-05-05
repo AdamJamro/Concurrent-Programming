@@ -265,8 +265,8 @@ procedure  Travelers is
       Reset(G, Seed);
       X := Integer(Float'Floor(Float(Board_Width)  * Random(G)));
       Y := Integer(Float'Floor(Float(Board_Height) * Random(G)));
-      Put_Line("Initial position: " &
-               Integer'Image(X) & " " & Integer'Image(Y));
+      --Put_Line("Initial position: " &
+      --         Integer'Image(X) & " " & Integer'Image(Y));
       return (X => X, Y => Y);
    end Get_Random_Position;
 
@@ -292,8 +292,9 @@ begin
    --     Integer'Image(Board_Height) &" |"&
    --     "..."
    --  );
+      Put_Line("-1 15 15 15");
 
-   for I in Travel_Tasks'Range loop
+  for I in Travel_Tasks'Range loop
       Initial_Positions(I) := Get_Random_Position(Seeds(I+1));
       -- check if the position is already occupied
       while Used_Initial_Positions(Initial_Positions(I).X, Initial_Positions(I).Y) = true loop

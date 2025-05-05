@@ -274,21 +274,23 @@ procedure  Travelers is
    Used_Initial_Positions : array (0 .. Board_Width, 0 .. Board_Height) of Boolean := (others => (others => False));
 begin
 
-     Put_Line(
-        "timestamp "&
-        "| no. travelers" &" "&
-        "| width" &" "&
-        "| height" &" "&
-        "| symbol"
-     );
-     Put_Line(
-        "... |"&
-        Integer'Image(Nr_Of_Travelers) &" |"&
-        Integer'Image(Board_Width) &" |"&
-        Integer'Image(Board_Height) &" |"&
-        "..."
-     );
+   -- deprecated:
+   --  Put_Line(
+   --     "timestamp "&
+   --     "| no. travelers" &" "&
+   --     "| width" &" "&
+   --     "| height" &" "&
+   --     "| symbol"
+   --  );
+   --  Put_Line(
+   --     "... |"&
+   --     Integer'Image(Nr_Of_Travelers) &" |"&
+   --     Integer'Image(Board_Width) &" |"&
+   --     Integer'Image(Board_Height) &" |"&
+   --     "..."
+   --  );
 
+   Put_Line("-1 15 15 15");
 
    for I in Travel_Tasks'Range loop
       Travel_Tasks(I).Init(I, Seeds(I+1), Symbol, Get_Initial_Position(I));

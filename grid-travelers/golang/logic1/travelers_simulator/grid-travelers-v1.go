@@ -18,14 +18,15 @@ func runTraveler(traveler *models.Traveler) {
 }
 
 func RunSimulation() {
-	fmt.Println("Simulation commences...")
+	//fmt.Println("Simulation commences...")
 
 	// initialize travelers
 	travelers := models.MakeTravelers()
 	wg := sync.WaitGroup{}
-	fmt.Println("Travelers has been initialized")
+	//fmt.Println("Travelers has been initialized")
 
-	fmt.Println("timestamp | id | x | y | id-symbol")
+	//fmt.Println("timestamp | id | x | y | id-symbol")
+	fmt.Println("-1 15 15 15")
 
 	// run travelers
 	for i := range config.NoOfTravelers {
@@ -38,5 +39,5 @@ func RunSimulation() {
 	}
 
 	wg.Wait()
-	fmt.Println("Simulation stops.")
+	//fmt.Println("Simulation stops.")
 }

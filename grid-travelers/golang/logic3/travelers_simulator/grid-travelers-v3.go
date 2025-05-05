@@ -2,18 +2,18 @@ package travelers_simulator
 
 import (
 	"fmt"
-	"grid-travelers-v2/config"
-	"grid-travelers-v2/models"
+	"grid-travelers-v3/config"
+	"grid-travelers-v3/models"
 	"sync"
 )
 
 func runTraveler(traveler *models.Traveler, semaphores models.GridFieldSemaphores) {
 	for range traveler.GetNoOfSteps() {
 		delay := traveler.Delay()
-		if success := traveler.MakeRandomMove(config.MaxDelay-delay, semaphores); !success {
+		if success := traveler.MakeMove(config.MaxDelay-delay, semaphores); !success {
 			//fmt.Println("Timeout reached for traveler no. ", traveler.GetId())
 			traveler.RuneSymbolToLowerCase()
-			traveler.SaveState()
+			_ = traveler.SaveState() // do not handle errors here
 			break
 		}
 		if errorStatus := traveler.SaveState(); errorStatus != nil {
@@ -23,7 +23,6 @@ func runTraveler(traveler *models.Traveler, semaphores models.GridFieldSemaphore
 }
 
 func RunSimulation() {
-	fmt.Println("Simulation commences...")
 
 	// synchronization
 	gridSemaphores := models.GridFieldSemaphores{}
@@ -32,9 +31,10 @@ func RunSimulation() {
 	// initialize travelers
 	travelers := models.MakeTravelers(gridSemaphores)
 	wg := sync.WaitGroup{}
-	fmt.Println("Travelers has been initialized")
+	//fmt.Println("Travelers has been initialized")
 
-	fmt.Println("timestamp | id | x | y | id-symbol")
+	//fmt.Println("timestamp | id | x | y | id-symbol")
+	fmt.Println("-1 15 15 15")
 
 	// run travelers
 	for i := range config.NoOfTravelers {
@@ -47,5 +47,5 @@ func RunSimulation() {
 	}
 
 	wg.Wait()
-	fmt.Println("Simulation stops.")
+	//fmt.Println("Simulation stops.")
 }

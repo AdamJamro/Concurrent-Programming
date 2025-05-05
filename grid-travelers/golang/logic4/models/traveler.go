@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"grid-travelers-v2/config"
+	"grid-travelers-v4/config"
 	"time"
 	"unicode"
 )
@@ -23,6 +23,14 @@ type TravelerData struct {
 	Generator *config.Generator
 	Position  position
 }
+
+// TODO: delete
+//func InitialPosition(index int) position {
+//	return position{
+//		x: index,
+//		y: index,
+//	}
+//}
 
 // MakeTravelers defines how travelers are being made
 func MakeTravelers(semaphores GridFieldSemaphores) [config.NoOfTravelers]Traveler {
@@ -47,6 +55,7 @@ func MakeTravelers(semaphores GridFieldSemaphores) [config.NoOfTravelers]Travele
 			fmt.Println(errorMsg)
 		}
 	}
+
 	return travelers
 }
 
@@ -64,6 +73,7 @@ func (t *Traveler) InitializeTraveler(data TravelerData, semaphores GridFieldSem
 		return fmt.Errorf("error: Timeout while acquiring semaphore for initial position")
 	}
 	t.pos = data.Position
+
 	t.noOfSteps = t.generator.Intn(config.MaxSteps-config.MinSteps) + config.MinSteps
 	t.timestamp = nowInNanoseconds()
 	errorStatus := t.addTrace()
@@ -88,18 +98,19 @@ func (t *Traveler) getPosition() position {
 	return position{x: t.pos.x, y: t.pos.y}
 }
 
+// MakeRandomMove unused (used in precious logic systems)
 func (t *Traveler) MakeRandomMove(stepTimeout time.Duration, semaphores GridFieldSemaphores) bool {
 	moveType := MoveType(t.generator.Intn(4))
 	return t.Move(moveType, stepTimeout, semaphores)
 }
 
-func (t *Traveler) SaveState() error {
+func (t *Traveler) LogState() error {
 	return t.addTrace()
 }
 
 // Move operates on board of a 2D torus topology
 // with (config.GridHeight x config.GridWidth) dimensions
-// returns true if move was successful, false otherwise
+// returns true if move was successful (succeeded within the timeout), false otherwise
 func (t *Traveler) Move(m MoveType, stepTimeout time.Duration, semaphores GridFieldSemaphores) bool {
 	newPos := position{x: t.pos.x, y: t.pos.y}
 	switch m {
@@ -118,8 +129,12 @@ func (t *Traveler) Move(m MoveType, stepTimeout time.Duration, semaphores GridFi
 
 	select {
 	case <-semaphores.at(newPos.x, newPos.y):
-		semaphores.at(t.pos.x, t.pos.y) <- struct{}{}
+		oldPos := t.getPosition()
 		t.pos = newPos
+		if savingError := t.LogState(); savingError != nil {
+			fmt.Println(savingError, "\nError on saving state for traveler no. ", t.GetId())
+		}
+		semaphores.at(oldPos.x, oldPos.y) <- struct{}{}
 		return true
 	case <-timeout:
 		return false
