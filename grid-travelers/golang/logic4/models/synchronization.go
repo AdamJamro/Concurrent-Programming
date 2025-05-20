@@ -227,10 +227,6 @@ func log(x int, y int, state ServerState, args ...interface{}) {
 }
 
 func handleEnteringOnWildlife(x int, y int, state *ServerState, request *RequestType, requests *TileRequestChannels, forcedMoveChannels *ForcedMoveChannels) error {
-	//request.response <- ResponseType{
-	//	ResponseCode: ResponseCodeError,
-	//}
-	//return nil
 
 	timeout := time.After(max(config.MinTimeout, request.timeout-(time.Since(request.timestamp))))
 	var wildlifeDestination []Position = getNeighbours(Position{x: x, y: y}, request.requester.pos.x, request.requester.pos.y)
@@ -341,15 +337,6 @@ func TileServer(x int, y int, requestChannels *TileRequestChannels, forcedMoveCh
 
 			// assert content != nil
 
-			//if request.requester.pos == state.content.pos &&
-			//	request.requester.id != content.id {
-			//	request.response <- ResponseType{
-			//		ResponseCode: ResponseCodeError,
-			//	}
-			//	fmt.Println("error: two travellers were found on the same tile")
-			//	continue
-			//}
-
 			if request.requester.id == state.id {
 				_ = handleLeaveRequest(x, y, &state, &request, requestChannels)
 				continue
@@ -371,14 +358,6 @@ func TileServer(x int, y int, requestChannels *TileRequestChannels, forcedMoveCh
 			}
 
 			// now we are sure it's a request to enter this tile
-
-			//if content.alive == false {
-			//	request.response <- ResponseType{
-			//		ResponseCode: ResponseCodeError,
-			//	}
-			//	fmt.Printf("error: cannot move into (%d, %d) the tile has dead content\n", x, y)
-			//	continue
-			//}
 
 			var err error
 			if state.content == Ambush {
