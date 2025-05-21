@@ -1,49 +1,31 @@
-package protocol_simulator
+package impl
 
 import (
 	"fmt"
-	"mutex-protocols-template/config"
-	"mutex-protocols-template/models"
+	"mutex-protocols/backery/config"
+	"mutex-protocols/backery/models"
 	"sync"
 	"time"
 )
 
-// Resources
-type Resources struct {
-	// TODO
-}
-
-func entryProtocol(commonResources *Resources) {
-	time.Sleep(time.Millisecond) // FOR ANIMATION PURPOSES
-	// TODO
-}
-
-func exitProtocol(commonResources *Resources) {
-	time.Sleep(time.Millisecond) // FOR ANIMATION PURPOSES
-	// TODO
-}
-
-func createResources() *Resources {
-	// TODO
-	return &Resources{}
-}
-
 func runProcess(process *models.Process, commonResources *Resources) {
-	// assume process is in LocalSection state
+	// assume process is already in LocalSection state
 	for step := 0; step < (process.GetNoOfSteps() / 4); step++ {
 		process.Delay()
 
 		process.ChangeState(config.EntryProtocol)
-		entryProtocol(commonResources)
+		entryProtocol(process.GetId(), commonResources)
 
 		process.ChangeState(config.CriticalSection)
 		process.Delay()
 
 		process.ChangeState(config.ExitProtocol)
-		exitProtocol(commonResources)
+		exitProtocol(process.GetId(), commonResources)
 
 		process.ChangeState(config.LocalSection)
 	}
+	time.Sleep(5 * time.Millisecond) // for animation purposes
+	process.Kill()                   // for animation purposes
 }
 
 func RunSimulation() {
@@ -74,7 +56,7 @@ func RunSimulation() {
 	for i := 0; i < config.NoOfSections; i++ {
 		fmt.Printf("%s;", config.SectionLabels[i])
 	}
-	fmt.Printf("NO_EXTRA_LABELS;\n")
+	fmt.Printf("MAX_TICKET;=;%d\n", commonResources.MaxTicket)
 
 	for _, process := range processes {
 		process.PrintReport()

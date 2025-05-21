@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"mutex-protocols-template/config"
+	"mutex-protocols/dekker/config"
 	"time"
 	"unicode"
 )

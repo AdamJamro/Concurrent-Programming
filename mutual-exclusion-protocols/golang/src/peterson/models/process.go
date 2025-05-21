@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"mutex-protocols-template/config"
+	"mutex-protocols/peterson/config"
 	"time"
 	"unicode"
 )

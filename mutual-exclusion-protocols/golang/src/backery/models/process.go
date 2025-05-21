@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"mutex-protocols-template/config"
+	"mutex-protocols/backery/config"
 	"time"
 	"unicode"
 )

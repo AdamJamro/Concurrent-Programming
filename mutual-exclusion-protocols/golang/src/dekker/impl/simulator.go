@@ -1,49 +1,29 @@
-package protocol_simulator
+package impl
 
 import (
 	"fmt"
-	"mutex-protocols-template/config"
-	"mutex-protocols-template/models"
+	"mutex-protocols/dekker/config"
+	"mutex-protocols/dekker/models"
 	"sync"
-	"time"
 )
 
-// Resources
-type Resources struct {
-	// TODO
-}
-
-func entryProtocol(commonResources *Resources) {
-	time.Sleep(time.Millisecond) // FOR ANIMATION PURPOSES
-	// TODO
-}
-
-func exitProtocol(commonResources *Resources) {
-	time.Sleep(time.Millisecond) // FOR ANIMATION PURPOSES
-	// TODO
-}
-
-func createResources() *Resources {
-	// TODO
-	return &Resources{}
-}
-
 func runProcess(process *models.Process, commonResources *Resources) {
-	// assume process is in LocalSection state
+	// assume process is already in LocalSection state
 	for step := 0; step < (process.GetNoOfSteps() / 4); step++ {
 		process.Delay()
 
 		process.ChangeState(config.EntryProtocol)
-		entryProtocol(commonResources)
+		entryProtocol(process.GetId(), commonResources)
 
 		process.ChangeState(config.CriticalSection)
 		process.Delay()
 
 		process.ChangeState(config.ExitProtocol)
-		exitProtocol(commonResources)
+		exitProtocol(process.GetId(), commonResources)
 
 		process.ChangeState(config.LocalSection)
 	}
+	process.Kill() // for animation purposes
 }
 
 func RunSimulation() {
